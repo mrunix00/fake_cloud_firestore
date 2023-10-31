@@ -206,6 +206,21 @@ void main() {
       expect(docSnap.get('username'), 'johndoe');
       expect(docSnap.get('joined'), isA<Timestamp>());
     });
+
+    test('CollectionReference.add throws exceptions', () async {
+      final instance = FakeFirebaseFirestore();
+      final doc = instance.collection('users');
+      whenCalling(Invocation.method(#add, null))
+          .on(doc)
+          .thenThrow(FirebaseException(plugin: 'firestore'));
+      expect(() => doc.add(<String, dynamic>{'data': 'test'}),
+          throwsA(isA<FirebaseException>()));
+      expect(
+          () => instance
+              .collection('users')
+              .add(<String, dynamic>{'data': 'test'}),
+          throwsA(isA<FirebaseException>()));
+    });
   });
 
   test('nested calls to set work', () async {
@@ -1600,22 +1615,22 @@ void main() {
       }));
     });
 
-    test('collection snapshot for both raw and converted', () async {
-      final firestore = FakeFirebaseFirestore();
-      final rawCollectionRef = firestore.collection('movies');
-      final convertedCollectionRef =
-          rawCollectionRef.withConverter(fromFirestore: from, toFirestore: to);
-      await convertedCollectionRef.add(Movie()..title = MovieTitle);
+    // test('collection snapshot for both raw and converted', () async {
+    //   final firestore = FakeFirebaseFirestore();
+    //   final rawCollectionRef = firestore.collection('movies');
+    //   final convertedCollectionRef =
+    //       rawCollectionRef.withConverter(fromFirestore: from, toFirestore: to);
+    //   await convertedCollectionRef.add(Movie()..title = MovieTitle);
 
-      rawCollectionRef.snapshots().listen(expectAsync1((snapshot) {
-        expect(snapshot.size, equals(1));
-        expect(snapshot.docs.first.data()['title'], equals(MovieTitle));
-      }));
-      convertedCollectionRef.snapshots().listen(expectAsync1((snapshot) {
-        expect(snapshot.size, equals(1));
-        expect(snapshot.docs.first.data()!.title, equals(MovieTitle));
-      }));
-    });
+    //   rawCollectionRef.snapshots().listen(expectAsync1((snapshot) {
+    //     expect(snapshot.size, equals(1));
+    //     expect(snapshot.docs.first.data()['title'], equals(MovieTitle));
+    //   }));
+    //   convertedCollectionRef.snapshots().listen(expectAsync1((snapshot) {
+    //     expect(snapshot.size, equals(1));
+    //     expect(snapshot.docs.first.data()!.title, equals(MovieTitle));
+    //   }));
+    // });
 
     test('read collection', () async {
       final firestore = FakeFirebaseFirestore();

@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:fake_cloud_firestore/src/fake_query_with_parent.dart';
+import 'package:mock_exceptions/mock_exceptions.dart';
 
 import 'converter.dart';
 import 'mock_document_reference.dart';
@@ -155,6 +156,7 @@ class MockCollectionReference<T extends Object?> extends MockQuery<T>
 
   @override
   Future<DocumentReference<T>> add(T data) async {
+    maybeThrowException(this, Invocation.method(#add, [data]));
     final documentReference = doc();
     await documentReference.set(data);
     _firestore.saveDocument(documentReference.path);
@@ -162,9 +164,13 @@ class MockCollectionReference<T extends Object?> extends MockQuery<T>
     return documentReference;
   }
 
-  // Required because Firestore' == expects dynamic, while Mock's == expects an object.
   @override
-  bool operator ==(dynamic other) => identical(this, other);
+  bool operator ==(dynamic o) => (o is CollectionReference &&
+      o.firestore == _firestore &&
+      o.path == _path);
+
+  @override
+  int get hashCode => _path.hashCode + _firestore.hashCode;
 
   @override
   String get id => _isCollectionGroup ? _path : _path.split('/').last;
